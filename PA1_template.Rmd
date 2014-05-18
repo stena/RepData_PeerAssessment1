@@ -3,18 +3,85 @@
 
 ## Loading and preprocessing the data
 
+Loading the data:
+```{r}
+library(lattice)
+activity <- read.csv('activity.csv')
+                     
+```
+Preprocessing:
+```{r}
+activ_complete <- activity[complete.cases(activity),]
+```
+
 
 
 ## What is mean total number of steps taken per day?
+```{r}
+stepsperday <- aggregate(activ_complete$steps,list(Date = activ_complete$date), sum)
+hist(stepsperday$x, xlab='Steps per Day', main='Histogram of Steps per Day')
+```
 
+Mean total number of steps taken per day:
+```{r}
+sum(stepsperday$x)/length(stepsperday$x)
+```
 
+Median:
+```{r}
+median(stepsperday$x, na.rm=TRUE)
+```
 
 ## What is the average daily activity pattern?
+```{r}
+stepsperinterval <- aggregate(activ_complete$steps,list(Interval = activ_complete$interval), sum)
+plot(stepsperinterval$x/length(stepsperday$x),type='l')
 
+```
+
+Max step interval:
+```{r}
+which.max(stepsperinterval$x)
+```
 
 
 ## Imputing missing values
+Total number of NAs:
+```{r}
+nrow(activity) - nrow(activ_complete)
+```
 
+Strategy for filling in all of the missing values in the dataset: the NAs will be replaced by zeros, since if they are not reported, then the person probably haven't done the exercises! ;)
+```{r}
+activity[is.na(activity)] <- 0
+```
+## What is mean total number of steps taken per day in the imputed dataset?
+```{r}
+stepsperday <- aggregate(activity$steps,list(Date = activity$date), sum)
+hist(stepsperday$x, xlab='Steps per Day', main='Histogram of Steps per Day in the imputed dataset')
+```
+
+Mean total number of steps taken per day in the imputed dataset:
+```{r}
+sum(stepsperday$x)/length(stepsperday$x)
+```
+
+Median in the imputed dataset:
+```{r}
+median(stepsperday$x, na.rm=TRUE)
+```
+
+The values are of course smaller than in the first part of assignment due to the method of replacing missing values by zeros.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+Sys.setlocale("LC_TIME", "English")
+weekend <- c('Sat','Sun')
+weekday <- c('Mon','Tue','Wed','Thu','Fri')
+
+a <- transform(activity,Day = factor(weekdays(as.Date(activity$date),abbreviate=TRUE) %in% weekend, 
+                                     labels=c('weekday','weekend')))
+xyplot(steps ~ interval | Day, data = a, layout=c(1,2), type='l', ylab="Average steps per interval")
+
+```
